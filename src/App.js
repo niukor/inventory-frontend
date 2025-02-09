@@ -108,7 +108,7 @@ const LoginPage = ({ onLogin }) => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      console.log('发送登录请求，用户名：', username, '，密码：', password);
+      //console.log('发送登录请求，用户名：', username, '，密码：', password);
       const response = await axios.post('http://localhost:8081/login', {
         username,
         password,
