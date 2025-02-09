@@ -180,7 +180,7 @@ const App = () => {
   const fetchInventories = useCallback(async () => {
     try {
       let response;
-      if (username === 'admin_na') {
+      if (username === '45420191') {
         response = await axios.get('http://localhost:8081/inventories');
       } else {
         response = await axios.get(`http://localhost:8081/inventories?ownerId=${username}`);
@@ -273,6 +273,11 @@ const App = () => {
     return <LoginPage onLogin={handleLoginSuccess} />;
   }
 
+  // 下载Excel文件
+  const downloadExcel = () => {
+    window.open('http://localhost:8081/inventories/export/excel', '_blank');
+  };
+
   return (
     <GlobalStyle>
       <h1 style={{ textAlign: 'center' }}>Inventory Check System</h1>
@@ -280,7 +285,7 @@ const App = () => {
       <Button onClick={handleLogout} style={{ float: 'right' }}>退出</Button> {/* 添加退出按钮 */}
 
       <TabNav>
-        <TabButton active={activeTab === 0} onClick={() => setActiveTab(0)} disabled={username !== 'admin_na'}>
+        <TabButton active={activeTab === 0} onClick={() => setActiveTab(0)} disabled={username !== '45420191'}>
           用户信息
         </TabButton>
         <TabButton active={activeTab === 1} onClick={() => setActiveTab(1)}>
@@ -289,7 +294,7 @@ const App = () => {
       </TabNav>
       {activeTab === 0 && (
         <div>
-          <Card>
+          {/* <Card>
             <h2>创建新用户</h2>
             <Input
               type="text"
@@ -304,6 +309,10 @@ const App = () => {
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <Button onClick={createUser}>创建</Button>
+          </Card> */}
+          <Card>
+            <h2>数据下载</h2>
+            <Button onClick={downloadExcel} style={{ marginBottom: '20px' }}>下载库存Excel</Button>
           </Card>
           <Card>
             <h2>用户列表</h2>
@@ -320,7 +329,7 @@ const App = () => {
                   <tr key={user.id}>
                     <TableCell>{user.id}</TableCell>
                     <TableCell>{user.username}</TableCell>
-                    <TableCell>{user.password}</TableCell>
+                    <TableCell>***</TableCell>
                   </tr>
                 ))}
               </tbody>
