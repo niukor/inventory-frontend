@@ -66,6 +66,19 @@ const TableCell = styled.td`
   min-width: 100px;
 `;
 
+// 下拉列表样式
+const Select = styled.select`
+  padding: 10px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
 // Tab 导航样式
 const TabNav = styled.div`
   display: flex;
@@ -96,7 +109,7 @@ const LoginPage = ({ onLogin }) => {
     setIsLoading(true);
     try {
       console.log('发送登录请求，用户名：', username, '，密码：', password);
-      const response = await axios.post('http://118.31.3.45:8081/login', {
+      const response = await axios.post('http://localhost:8081/login', {
         username,
         password,
       });
@@ -156,7 +169,7 @@ const App = () => {
   // 获取所有用户
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://118.31.3.45:8081/users');
+      const response = await axios.get('http://localhost:8081/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -168,9 +181,9 @@ const App = () => {
     try {
       let response;
       if (username === 'admin_na') {
-        response = await axios.get('http://118.31.3.45:8081/inventories');
+        response = await axios.get('http://localhost:8081/inventories');
       } else {
-        response = await axios.get(`http://118.31.3.45:8081/inventories?ownerId=${username}`);
+        response = await axios.get(`http://localhost:8081/inventories?ownerId=${username}`);
       }
       setInventories(response.data);
     } catch (error) {
@@ -181,7 +194,7 @@ const App = () => {
   // 创建新用户
   const createUser = async () => {
     try {
-      const response = await axios.post('http://118.31.3.45:8081/users', {
+      const response = await axios.post('http://localhost:8081/users', {
         username: newUsername,
         password: newPassword,
       });
@@ -209,9 +222,9 @@ const App = () => {
       });
       setInventories(updatedInventories);
       try {
-        console.log('Sending PUT request to:', `http://118.31.3.45:8081/inventories/${inventoryId}`);
+        console.log('Sending PUT request to:', `http://localhost:8081/inventories/${inventoryId}`);
         console.log('Request data:', editingInventory);
-        const response = await axios.put(`http://118.31.3.45:8081/inventories/${inventoryId}`, editingInventory);
+        const response = await axios.put(`http://localhost:8081/inventories/${inventoryId}`, editingInventory);
         console.log('PUT request response:', response);
       } catch (error) {
         console.error('Error saving inventory:', error);
@@ -226,7 +239,7 @@ const App = () => {
     if (!confirmedInventories.includes(inventoryId)) {
       try {
         // 调用后端接口确认库存信息
-        const response = await axios.put(`http://118.31.3.45:8081/inventories/${inventoryId}/confirm`);
+        const response = await axios.put(`http://localhost:8081/inventories/${inventoryId}/confirm`);
         console.log('Confirm inventory response:', response);
         setConfirmedInventories([...confirmedInventories, inventoryId]);
         setEditingInventory(null);
@@ -322,6 +335,7 @@ const App = () => {
             <thead>
               <tr>
                 <TableHeader>ID</TableHeader>
+                <TableHeader>Level3 - GBGF</TableHeader>
                 <TableHeader>Manager Name</TableHeader>
                 <TableHeader>Legal Entity</TableHeader>
                 <TableHeader>Owner ID</TableHeader>
@@ -343,6 +357,9 @@ const App = () => {
                 <tr key={inventory.id}>
                   <TableCell>{inventory.id}</TableCell>
                   <TableCell>
+                    {inventory.gbgf}
+                  </TableCell>
+                  <TableCell>
                     {inventory.managerName}
                   </TableCell>
                   <TableCell>
@@ -352,105 +369,39 @@ const App = () => {
                     {inventory.ownerId}
                   </TableCell>
                   <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="name"
-                        value={editingInventory.name}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, name: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)} // 失去焦点时保存数据
-                      />
-                    ) : (
-                      inventory.name
-                    )}
+                    {inventory.name}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.emplClass}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.brand}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.model}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.imeiMeid}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.deviceType}
+                  </TableCell>
+                  <TableCell>
+                    {inventory.assetId}
                   </TableCell>
                   <TableCell>
                     {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="emplClass"
-                        value={editingInventory.emplClass}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, emplClass: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)} // 失去焦点时保存数据
-                      />
-                    ) : (
-                      inventory.emplClass
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="brand"
-                        value={editingInventory.brand}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, brand: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)} // 失去焦点时保存数据
-                      />
-                    ) : (
-                      inventory.brand
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="model"
-                        value={editingInventory.model}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, model: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)} // 失去焦点时保存数据
-                      />
-                    ) : (
-                      inventory.model
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="imeiMeid"
-                        value={editingInventory.imeiMeid}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, imeiMeid: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)} // 失去焦点时保存数据
-                      />
-                    ) : (
-                      inventory.imeiMeid
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="deviceType"
-                        value={editingInventory.deviceType}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, deviceType: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)}
-                      />
-                    ) : (
-                      inventory.deviceType
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
-                        name="assetId"
-                        value={editingInventory.assetId}
-                        onChange={(e) => setEditingInventory({ ...editingInventory, assetId: e.target.value })}
-                        onBlur={() => saveInventory(inventory.id)}
-                      />
-                    ) : (
-                      inventory.assetId
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingInventory && editingInventory.id === inventory.id ? (
-                      <Input
-                        type="text"
+                      <Select
                         name="inventoryCheck"
                         value={editingInventory.inventoryCheck}
                         onChange={(e) => setEditingInventory({ ...editingInventory, inventoryCheck: e.target.value })}
                         onBlur={() => saveInventory(inventory.id)}
-                      />
+                      >
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Broken">Broken</option>
+                        <option value="Lost">Lost</option>
+                        <option value="Others">Others</option>
+                      </Select>
                     ) : (
                       inventory.inventoryCheck
                     )}
