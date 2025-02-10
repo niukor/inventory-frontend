@@ -18,6 +18,7 @@ const Card = styled.div`
   padding: 20px;
   margin-bottom: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
 `;
 
 // 输入框样式
@@ -51,12 +52,15 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  table-layout: auto;
 `;
 
 const TableHeader = styled.th`
   padding: 10px;
   border: 1px solid #30363d;
   text-align: left;
+  width: auto;
+  min-width: 100px;
 `;
 
 const TableCell = styled.td`
@@ -99,6 +103,27 @@ const TabButton = styled.button`
   }
 `;
 
+// 分页导航样式
+const PaginationNav = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const PaginationButton = styled.button`
+  padding: 10px 20px;
+  border: none;
+  background-color: ${(props) => (props.active ? '#238636' : '#161b22')};
+  color: white;
+  cursor: pointer;
+  margin: 0 5px;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #2ea043;
+  }
+`;
+
 // 登录页面组件
 const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -108,13 +133,11 @@ const LoginPage = ({ onLogin }) => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      //console.log('发送登录请求，用户名：', username, '，密码：', password);
       const response = await axios.post('http://localhost:8081/login', {
         username,
         password,
       });
-      console.log('登录响应：', response.data);
-      const result = response.data.trim(); // 去除首尾空格
+      const result = response.data.trim();
       if (result === '登录成功') {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', username);
@@ -165,6 +188,8 @@ const App = () => {
   const [editingInventory, setEditingInventory] = useState(null);
   const [confirmedInventories, setConfirmedInventories] = useState([]);
   const [activeTab, setActiveTab] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // 每页显示 10 条数据
 
   // 获取所有用户
   const fetchUsers = async () => {
@@ -233,12 +258,10 @@ const App = () => {
     }
   };
 
-
   // 确认库存项，使其不可编辑
   const confirmInventory = async (inventoryId) => {
     if (!confirmedInventories.includes(inventoryId)) {
       try {
-        // 调用后端接口确认库存信息
         const response = await axios.put(`http://localhost:8081/inventories/${inventoryId}/confirm`);
         console.log('Confirm inventory response:', response);
         setConfirmedInventories([...confirmedInventories, inventoryId]);
@@ -266,7 +289,7 @@ const App = () => {
 
   const handleLoginSuccess = (username) => {
     setIsLoggedIn(true);
-    setUsername(username); // 设置用户名状态
+    setUsername(username);
   };
 
   if (!isLoggedIn) {
@@ -278,11 +301,22 @@ const App = () => {
     window.open('http://localhost:8081/inventories/export/excel', '_blank');
   };
 
+  // 计算当前页要显示的数据
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInventories = inventories.slice(indexOfFirstItem, indexOfLastItem);
+
+  // 计算总页数
+  const totalPages = Math.ceil(inventories.length / itemsPerPage);
+
+  // 切换页码
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <GlobalStyle>
       <h1 style={{ textAlign: 'center' }}>Inventory Check System</h1>
-      <p style={{ textAlign: 'right' }}>Welcome {username}</p> {/* 显示用户名 */}
-      <Button onClick={handleLogout} style={{ float: 'right' }}>退出</Button> {/* 添加退出按钮 */}
+      <p style={{ textAlign: 'right' }}>Welcome {username}</p>
+      <Button onClick={handleLogout} style={{ float: 'right' }}>退出</Button>
 
       <TabNav>
         <TabButton active={activeTab === 0} onClick={() => setActiveTab(0)} disabled={username !== '45420191'}>
@@ -294,22 +328,6 @@ const App = () => {
       </TabNav>
       {activeTab === 0 && (
         <div>
-          {/* <Card>
-            <h2>创建新用户</h2>
-            <Input
-              type="text"
-              placeholder="用户名"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-            />
-            <Input
-              type="password"
-              placeholder="密码"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-            <Button onClick={createUser}>创建</Button>
-          </Card> */}
           <Card>
             <h2>数据下载</h2>
             <Button onClick={downloadExcel} style={{ marginBottom: '20px' }}>下载库存Excel</Button>
@@ -362,7 +380,7 @@ const App = () => {
               </tr>
             </thead>
             <tbody>
-              {inventories.map((inventory) => (
+              {currentInventories.map((inventory) => (
                 <tr key={inventory.id}>
                   <TableCell>{inventory.id}</TableCell>
                   <TableCell>
@@ -429,24 +447,34 @@ const App = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button onClick={() => startEditing(inventory)}
-                      disabled={confirmedInventories.includes(inventory.id) || inventory.confirm === 'true'}
-                    >
-                      {confirmedInventories.includes(inventory.id) || inventory.confirm === 'true' ? '不可编辑' : '编辑'}
-                    </Button>
+                    {!confirmedInventories.includes(inventory.id) ? (
+                      <Button onClick={() => startEditing(inventory)}>编辑</Button>
+                    ) : (
+                      '已确认'
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      onClick={() => confirmInventory(inventory.id)}
-                      disabled={confirmedInventories.includes(inventory.id) || inventory.confirm === 'true'}
-                    >
-                      {confirmedInventories.includes(inventory.id) || inventory.confirm === 'true' ? '已确认' : '确认'}
-                    </Button>
+                    {!confirmedInventories.includes(inventory.id) ? (
+                      <Button onClick={() => confirmInventory(inventory.id)}>确认</Button>
+                    ) : (
+                      '已确认'
+                    )}
                   </TableCell>
                 </tr>
               ))}
             </tbody>
           </Table>
+          <PaginationNav>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <PaginationButton
+                key={index}
+                active={index + 1 === currentPage}
+                onClick={() => paginate(index + 1)}
+              >
+                {index + 1}
+              </PaginationButton>
+            ))}
+          </PaginationNav>
         </Card>
       )}
     </GlobalStyle>
