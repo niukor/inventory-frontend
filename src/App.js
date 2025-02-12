@@ -424,6 +424,7 @@ const App = () => {
                         onChange={(e) => setEditingInventory({ ...editingInventory, inventoryCheck: e.target.value })}
                         onBlur={() => saveInventory(inventory.id)}
                       >
+                        <option value="Pending">请选择</option>
                         <option value="Confirmed">Confirmed</option>
                         <option value="Broken">Broken</option>
                         <option value="Lost">Lost</option>
@@ -447,18 +448,19 @@ const App = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {!confirmedInventories.includes(inventory.id) ? (
-                      <Button onClick={() => startEditing(inventory)}>编辑</Button>
-                    ) : (
-                      '已确认'
-                    )}
+                    <Button onClick={() => startEditing(inventory)}
+                      disabled={confirmedInventories.includes(inventory.id) || inventory.confirm === 'true'}
+                    >
+                      {confirmedInventories.includes(inventory.id) || inventory.confirm === 'true' ? '已确认' : '编辑'}
+                    </Button>
                   </TableCell>
                   <TableCell>
-                    {!confirmedInventories.includes(inventory.id) ? (
-                      <Button onClick={() => confirmInventory(inventory.id)}>确认</Button>
-                    ) : (
-                      '已确认'
-                    )}
+                    <Button
+                      onClick={() => confirmInventory(inventory.id)}
+                      disabled={confirmedInventories.includes(inventory.id) || inventory.confirm === 'true'}
+                    >
+                      {confirmedInventories.includes(inventory.id) || inventory.confirm === 'true' ? '已确认' : '确认'}
+                    </Button>
                   </TableCell>
                 </tr>
               ))}
